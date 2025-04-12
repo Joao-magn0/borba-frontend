@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financeiro | Borba Café</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../icons/borba-logo.png" />
+
+  <!-- Tailwind CSS com suporte a dark mode persistente -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    if (localStorage.getItem('dark-mode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <!-- Estilos e bibliotecas -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+  <!-- Header e Sidebar -->
+  <div id="header"></div>
+  <div class="flex">
+    <div id="sidebar"></div>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 p-6 pt-24">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Controle Financeiro</h1>
+        <button onclick="abrirModalFinanceiro()" class="bg-[#103b2b] text-white px-4 py-2 rounded-xl hover:opacity-90">
+          ➕ Novo Lançamento
+        </button>
+      </div>
+
+      <!-- Botões de Exportação -->
+      <div class="flex gap-2 mb-6">
+        <button onclick="exportarFinanceiroCSV()" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600">
+          📄 Exportar CSV
+        </button>
+        <button onclick="exportarFinanceiroExcel()" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600">
+          📊 Exportar Excel
+        </button>
+      </div>
+
+      <!-- Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Receitas</p>
+          <h2 class="text-xl font-bold text-green-600" id="total-receitas">R$ 0,00</h2>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Despesas</p>
+          <h2 class="text-xl font-bold text-red-600" id="total-despesas">R$ 0,00</h2>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Saldo Atual</p>
+          <h2 class="text-xl font-bold" id="saldo-atual">R$ 0,00</h2>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div class="overflow-auto bg-white dark:bg-gray-800 rounded-2xl shadow">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-100 dark:bg-gray-700">
+            <tr>
+              <th class="p-4 text-left">Data</th>
+              <th class="p-4 text-left">Descrição</th>
+              <th class="p-4 text-left">Tipo</th>
+              <th class="p-4 text-left">Valor</th>
+              <th class="p-4 text-left">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-lancamentos">
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal-financeiro" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg w-full max-w-md space-y-4">
+      <h2 class="text-xl font-bold">Novo Lançamento</h2>
+      <input id="desc-fin" type="text" placeholder="Descrição" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
+      <input id="valor-fin" type="number" placeholder="Valor" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
+      <select id="tipo-fin" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
+        <option value="receita">Receita</option>
+        <option value="despesa">Despesa</option>
+      </select>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="fecharModalFinanceiro()" class="px-4 py-2 rounded-xl border">Cancelar</button>
+        <button onclick="salvarLancamento()" class="bg-[#103b2b] text-white px-4 py-2 rounded-xl hover:opacity-90">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão flutuante para voltar -->
+  <a href="../index.html" title="Voltar para o menu"
+    class="fixed top-6 left-6 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-[#103b2b] hover:text-white transition">
+    🏠
+  </a>
+
+  <script src="../js/tema.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>

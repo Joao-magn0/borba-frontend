@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estoque | Borba Café</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../icons/borba-logo.png" />
+
+  <!-- Tailwind CSS + Dark Mode -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+    if (localStorage.getItem('dark-mode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <!-- Bibliotecas -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+  <!-- Header e Sidebar -->
+  <div id="header"></div>
+  <div class="flex">
+    <div id="sidebar"></div>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 p-6 pt-24">
+      <h1 class="text-2xl font-bold mb-6">Controle de Estoque</h1>
+
+      <!-- Botões de Exportação -->
+      <div class="flex gap-2 mb-6">
+        <button onclick="exportarEstoqueCSV()" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600">
+          📄 Exportar CSV
+        </button>
+        <button onclick="exportarEstoqueExcel()" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600">
+          📊 Exportar Excel
+        </button>
+      </div>
+
+      <!-- Cards de Resumo -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Total de produtos</p>
+          <h2 class="text-xl font-bold" id="total-produtos">0</h2>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Produtos em falta</p>
+          <h2 class="text-xl font-bold text-red-500" id="produtos-em-falta">0</h2>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <button onclick="abrirModal()" class="bg-[#103b2b] text-white px-4 py-2 rounded-xl hover:opacity-90">
+            ➕ Adicionar Produto
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabela de Estoque -->
+      <div class="overflow-auto bg-white dark:bg-gray-800 rounded-2xl shadow">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-100 dark:bg-gray-700">
+            <tr>
+              <th class="p-4 text-left">Produto</th>
+              <th class="p-4 text-left">Categoria</th>
+              <th class="p-4 text-left">Quantidade</th>
+              <th class="p-4 text-left">Status</th>
+              <th class="p-4 text-left">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-estoque">
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Adição de Produto -->
+  <div id="modal-produto" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg w-full max-w-md space-y-4">
+      <h2 class="text-xl font-bold">Adicionar Produto</h2>
+      <input id="produto-nome" type="text" placeholder="Nome" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
+      <input id="produto-categoria" type="text" placeholder="Categoria" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
+      <input id="produto-quantidade" type="number" placeholder="Quantidade" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="fecharModal()" class="px-4 py-2 rounded-xl border">Cancelar</button>
+        <button onclick="salvarProduto()" class="bg-[#103b2b] text-white px-4 py-2 rounded-xl hover:opacity-90">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão flutuante para voltar -->
+  <a href="../index.html" title="Voltar para o menu"
+    class="fixed top-6 left-6 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-[#103b2b] hover:text-white transition">
+    🏠
+  </a>
+
+  <!-- Scripts -->
+  <script src="../js/tema.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>

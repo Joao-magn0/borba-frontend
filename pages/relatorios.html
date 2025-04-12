@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatórios | Borba Café</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../icons/borba-logo.png" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    if (localStorage.getItem('dark-mode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+  <!-- Header e Sidebar -->
+  <div id="header"></div>
+  <div class="flex">
+    <div id="sidebar"></div>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 p-6 pt-24">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Relatório de Fluxo de Caixa</h1>
+        <div class="space-x-2">
+          <button onclick="exportarRelatorioCSV()" class="bg-gray-200 dark:bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700">📄 Exportar CSV</button>
+          <button onclick="exportarRelatorioExcel()" class="bg-gray-200 dark:bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700">📊 Exportar Excel</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Data Inicial</label>
+          <input id="data-inicio" type="date" class="w-full p-2 border rounded-xl dark:bg-gray-900 dark:text-white dark:border-gray-700" onchange="filtrarRelatorio()" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 dark:text-gray-300 mb-1">Data Final</label>
+          <input id="data-fim" type="date" class="w-full p-2 border rounded-xl dark:bg-gray-900 dark:text-white dark:border-gray-700" onchange="filtrarRelatorio()" />
+        </div>
+        <div class="flex items-end">
+          <button onclick="filtrarRelatorio()" class="bg-[#103b2b] text-white px-4 py-2 rounded-xl hover:opacity-90 w-full">🔍 Filtrar</button>
+        </div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Receitas no período</p>
+          <h2 class="text-xl font-bold text-green-600" id="total-receitas-rel">R$ 0,00</h2>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Despesas no período</p>
+          <h2 class="text-xl font-bold text-red-600" id="total-despesas-rel">R$ 0,00</h2>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow">
+          <p class="text-gray-500 dark:text-gray-400">Saldo no período</p>
+          <h2 class="text-xl font-bold" id="saldo-rel">R$ 0,00</h2>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div class="overflow-auto bg-white dark:bg-gray-800 rounded-2xl shadow mb-10">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-100 dark:bg-gray-700">
+            <tr>
+              <th class="p-4 text-left">Data</th>
+              <th class="p-4 text-left">Descrição</th>
+              <th class="p-4 text-left">Tipo</th>
+              <th class="p-4 text-left">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-relatorio">
+            <!-- Gerado via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Comparativo -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow flex flex-col items-center">
+          <div class="w-full flex justify-between items-center mb-2">
+            <h2 class="text-lg font-bold">Receitas vs Despesas</h2>
+            <button onclick="alternarGrafico()" class="text-sm px-3 py-1 rounded-xl border hover:bg-gray-100 dark:hover:bg-gray-700">🔁 Alternar</button>
+          </div>
+          <div class="w-full max-w-xs">
+            <canvas id="graficoPizza"></canvas>
+          </div>
+        </div>
+
+        <!-- Barras -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow">
+          <h2 class="text-lg font-bold mb-4">Evolução Mensal</h2>
+          <div class="w-full">
+            <canvas id="graficoBarras" style="max-height: 280px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Botão flutuante para voltar -->
+  <a href="../index.html" title="Voltar para o menu"
+    class="fixed top-6 left-6 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:bg-[#103b2b] hover:text-white transition">
+    🏠
+  </a>
+
+  <!-- Scripts -->
+  <script src="../js/main.js"></script>
+  <script>
+    let tipoAtual = "doughnut";
+    let graficoPizza = null;
+    let graficoBarras = null;
+
+    function alternarGrafico() {
+      tipoAtual = tipoAtual === "bar" ? "doughnut" : "bar";
+      if (graficoPizza) graficoPizza.destroy();
+      gerarGraficoPizza(); 
+    }
+
+    function gerarGraficoPizza() {
+      const lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
+      const receitas = lancamentos.filter(l => l.tipo === "receita").reduce((s, l) => s + l.valor, 0);
+      const despesas = lancamentos.filter(l => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
+
+      const ctx = document.getElementById("graficoPizza").getContext("2d");
+      graficoPizza = new Chart(ctx, {
+        type: tipoAtual,
+        data: {
+          labels: ["Receitas", "Despesas"],
+          datasets: [{
+            data: [receitas, despesas],
+            backgroundColor: ["#16a34a", "#dc2626"],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom" }
+          },
+          animation: {
+            duration: 800,
+            easing: "easeOutQuart"
+          }
+        }
+      });
+    }
+
+    function gerarGraficoBarras() {
+      const lancamentos = JSON.parse(localStorage.getItem("lancamentos")) || [];
+      const receitasPorMes = {};
+      const despesasPorMes = {};
+
+      lancamentos.forEach(l => {
+        const [d, m, a] = l.data.split("/");
+        const mes = `${m}/${a}`;
+        if (l.tipo === "receita") receitasPorMes[mes] = (receitasPorMes[mes] || 0) + l.valor;
+        else despesasPorMes[mes] = (despesasPorMes[mes] || 0) + l.valor;
+      });
+
+      const meses = Array.from(new Set([...Object.keys(receitasPorMes), ...Object.keys(despesasPorMes)]))
+        .sort((a, b) => {
+          const [ma, aa] = a.split("/").map(Number);
+          const [mb, ab] = b.split("/").map(Number);
+          return aa - ab || ma - mb;
+        });
+
+      const ctx = document.getElementById("graficoBarras").getContext("2d");
+      graficoBarras = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: meses,
+          datasets: [
+            {
+              label: "Receitas",
+              data: meses.map(m => receitasPorMes[m] || 0),
+              backgroundColor: "#16a34a",
+              borderRadius: 6
+            },
+            {
+              label: "Despesas",
+              data: meses.map(m => despesasPorMes[m] || 0),
+              backgroundColor: "#dc2626",
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          aspectRatio: 2,
+          plugins: {
+            legend: {
+              position: "top"
+            }
+          },
+          animation: {
+            duration: 1000,
+            easing: "easeOutBack"
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      gerarGraficoPizza();
+      gerarGraficoBarras();
+    });
+  </script>
+</body>
+</html>

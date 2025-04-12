@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Início | Borba Café</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="./icons/borba-logo.png" />
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="./manifest.json" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+    if (localStorage.getItem('dark-mode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-[#f3f4f6] dark:bg-gray-900 min-h-screen flex flex-col justify-center items-center text-gray-800 dark:text-gray-100 transition-colors duration-300">
+
+  <!-- Tela de Boas-Vindas -->
+  <div id="boas-vindas" class="fixed inset-0 z-50 bg-[#103b2b] flex items-center justify-center text-white text-center transition-opacity duration-1000">
+    <div class="space-y-4">
+      <h1 id="mensagem-boas-vindas" class="text-3xl md:text-4xl font-bold animate-pulse">Seja bem-vindo ao sistema Borba Café ☕</h1>
+      <p class="text-sm md:text-base opacity-80">Carregando o sistema...</p>
+    </div>
+  </div>
+
+  <!-- Botão de Dark Mode -->
+  <button onclick="alternarModoEscuro()" class="fixed top-6 right-6 z-50 bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-700 shadow-lg rounded-full w-12 h-12 flex items-center justify-center hover:opacity-80 transition">
+    <span id="icon-darkmode">🌙</span>
+  </button>
+
+  <!-- Título -->
+  <h1 class="text-3xl font-bold mb-8 text-[#103b2b] dark:text-white">Sistema Interno | Borba Café ☕</h1>
+
+  <!-- Menu -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl text-center px-4">
+    <a href="./pages/estoque.html"
+       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+      <h2 class="text-xl font-semibold mb-2">📦 Controle de Estoque</h2>
+      <p>Gerencie produtos, categorias e quantidades.</p>
+    </a>
+
+    <a href="./pages/funcionarios.html"
+       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+      <h2 class="text-xl font-semibold mb-2">👥 Funcionários</h2>
+      <p>Controle o consumo mensal e cadastros.</p>
+    </a>
+
+    <a href="./pages/financeiro.html"
+       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+      <h2 class="text-xl font-semibold mb-2">💰 Financeiro</h2>
+      <p>Visualize receitas, despesas e saldo.</p>
+    </a>
+
+    <a href="./pages/relatorios.html"
+       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+      <h2 class="text-xl font-semibold mb-2">📈 Relatórios</h2>
+      <p>Fluxo de caixa e gráficos visuais.</p>
+    </a>
+  </div>
+
+  <!-- Rodapé -->
+  <footer class="mt-12 text-sm text-gray-400 dark:text-gray-500 text-center">
+    Desenvolvido por Nexus · 2025<br>
+    Todos os direitos reservados.
+  </footer>
+
+  <!-- Registrar Service Worker PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('Service Worker registrado!', reg))
+        .catch(err => console.error('Erro ao registrar Service Worker:', err));
+    }
+  </script>
+
+  <!-- Script de boas-vindas com saudação dinâmica -->
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const hora = new Date().getHours();
+      let saudacao = "Seja bem-vindo";
+      if (hora >= 5 && hora < 12) saudacao = "Bom dia";
+      else if (hora >= 12 && hora < 18) saudacao = "Boa tarde";
+      else saudacao = "Boa noite";
+
+      document.getElementById("mensagem-boas-vindas").textContent = `${saudacao}, seja bem-vindo ao sistema Borba Café ☕`;
+
+      setTimeout(() => {
+        const tela = document.getElementById("boas-vindas");
+        tela.classList.add("opacity-0");
+        setTimeout(() => {
+          tela.style.display = 'none';
+        }, 1000);
+      }, 2000);
+
+      const icon = document.getElementById("icon-darkmode");
+      icon.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+    });
+
+    function alternarModoEscuro() {
+      const html = document.documentElement;
+      const icon = document.getElementById("icon-darkmode");
+      html.classList.toggle("dark");
+      const isDark = html.classList.contains("dark");
+      localStorage.setItem('dark-mode', isDark);
+      icon.textContent = isDark ? "☀️" : "🌙";
+    }
+  </script>
+</body>
+</html>
