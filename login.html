@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Borba Café</title>
+  <link rel="icon" type="image/png" href="icons/borba-logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+    if (localStorage.getItem('dark-mode') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center min-h-screen px-4">
+
+  <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md w-full max-w-md space-y-6">
+    <div class="text-center">
+      <img src="icons/borba-logo.png" class="w-14 mx-auto mb-4" alt="Logo Borba Café">
+      <h1 class="text-2xl font-bold text-[#103b2b] dark:text-white">Login no Borba Café ☕</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Acesse o sistema com seu usuário</p>
+    </div>
+
+    <div class="space-y-4">
+      <input id="username" type="text" placeholder="Nome de usuário" class="w-full p-3 rounded-xl border border-gray-300 dark:bg-gray-700 dark:border-gray-600" />
+      <input id="password" type="password" placeholder="Senha" class="w-full p-3 rounded-xl border border-gray-300 dark:bg-gray-700 dark:border-gray-600" />
+      <button onclick="login()" class="w-full bg-[#103b2b] text-white py-3 rounded-xl hover:opacity-90">Entrar</button>
+    </div>
+
+    <p id="erro-login" class="text-center text-sm text-red-500 hidden"></p>
+
+    <div class="text-center text-sm text-gray-500 dark:text-gray-400 pt-2">
+      Ainda não tem conta? <a href="register.html" class="text-[#103b2b] hover:underline">Cadastre-se</a>
+    </div>
+  </div>
+
+  <script>
+    const API_LOGIN = "https://borba-backend.onrender.com/api/auth/login";
+
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const erroMsg = document.getElementById("erro-login");
+
+      erroMsg.classList.add("hidden");
+
+      if (!username || !password) {
+        erroMsg.textContent = "Preencha todos os campos.";
+        erroMsg.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const res = await fetch(API_LOGIN, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("usuario", data.username);
+          localStorage.setItem("hierarquia", data.nivel); // <- salva o nível de acesso
+
+          window.location.href = "index.html";
+        } else {
+          erroMsg.textContent = data.message || "Credenciais inválidas.";
+          erroMsg.classList.remove("hidden");
+        }
+      } catch (err) {
+        erroMsg.textContent = "Erro ao conectar com o servidor.";
+        erroMsg.classList.remove("hidden");
+      }
+    }
+  </script>
+
+</body>
+</html>

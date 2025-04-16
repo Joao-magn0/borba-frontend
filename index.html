@@ -5,18 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Início | Borba Café</title>
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="./icons/borba-logo.png" />
-
-  <!-- Manifest PWA -->
   <link rel="manifest" href="./manifest.json" />
-
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script>
-    tailwind.config = {
-      darkMode: 'class'
-    }
+    tailwind.config = { darkMode: 'class' }
     if (localStorage.getItem('dark-mode') === 'true') {
       document.documentElement.classList.add('dark');
     }
@@ -42,26 +36,19 @@
 
   <!-- Menu -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl text-center px-4">
-    <a href="./pages/estoque.html"
-       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+    <a href="./pages/estoque.html" class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
       <h2 class="text-xl font-semibold mb-2">📦 Controle de Estoque</h2>
       <p>Gerencie produtos, categorias e quantidades.</p>
     </a>
-
-    <a href="./pages/funcionarios.html"
-       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+    <a href="./pages/funcionarios.html" class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
       <h2 class="text-xl font-semibold mb-2">👥 Funcionários</h2>
       <p>Controle o consumo mensal e cadastros.</p>
     </a>
-
-    <a href="./pages/financeiro.html"
-       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+    <a href="./pages/financeiro.html" class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
       <h2 class="text-xl font-semibold mb-2">💰 Financeiro</h2>
       <p>Visualize receitas, despesas e saldo.</p>
     </a>
-
-    <a href="./pages/relatorios.html"
-       class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
+    <a href="./pages/relatorios.html" class="bg-white dark:bg-gray-800 shadow-lg p-6 rounded-2xl transition hover:bg-[#103b2b] hover:text-white dark:hover:bg-white dark:hover:text-black">
       <h2 class="text-xl font-semibold mb-2">📈 Relatórios</h2>
       <p>Fluxo de caixa e gráficos visuais.</p>
     </a>
@@ -73,7 +60,7 @@
     Todos os direitos reservados.
   </footer>
 
-  <!-- Registrar Service Worker PWA -->
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js')
@@ -82,8 +69,13 @@
     }
   </script>
 
-  <!-- Script de boas-vindas com saudação dinâmica -->
+  <!-- Autenticação -->
   <script>
+    // Redirecionar se não estiver logado
+    if (!localStorage.getItem("token")) {
+      window.location.href = "./login.html";
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const hora = new Date().getHours();
       let saudacao = "Seja bem-vindo";
