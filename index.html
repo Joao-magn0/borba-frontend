@@ -69,13 +69,8 @@
     }
   </script>
 
-  <!-- Autenticação -->
+  <!-- Boas-vindas + Tema -->
   <script>
-    // Redirecionar se não estiver logado
-    if (!localStorage.getItem("token")) {
-      window.location.href = "./login.html";
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
       const hora = new Date().getHours();
       let saudacao = "Seja bem-vindo";
