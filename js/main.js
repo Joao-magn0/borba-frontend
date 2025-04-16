@@ -311,36 +311,9 @@ async function filtrarRelatorio() {
 }
 
 /**********************
- * AUTENTICAÇÃO
- **********************/
-function validarToken() {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    window.location.href = "../login.html";
-  }
-}
-
-function criarBotaoLogout() {
-  const btn = document.createElement("button");
-  btn.textContent = "🚪 Sair";
-  btn.title = "Logout";
-  btn.className =
-    "fixed top-6 right-20 z-50 bg-white dark:bg-gray-800 text-[#103b2b] dark:text-white px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 shadow hover:bg-red-100 dark:hover:bg-red-900 transition";
-  btn.onclick = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
-    window.location.href = "../login.html";
-  };
-  document.body.appendChild(btn);
-}
-
-/**********************
  * INICIALIZAÇÃO
  **********************/
 window.addEventListener("DOMContentLoaded", () => {
-  validarToken();
-  criarBotaoLogout();
-
   const path = window.location.pathname;
   if (path.includes("funcionarios")) renderizarFuncionarios();
   if (path.includes("estoque")) renderizarTabela();
