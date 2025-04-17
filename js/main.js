@@ -1,8 +1,8 @@
 // js/main.js
 
 const API_FUNCIONARIOS = "https://borba-backend.onrender.com/api/funcionarios";
-const API_PRODUTOS      = "https://borba-backend.onrender.com/api/produtos";
-const API_FINANCEIRO    = "https://borba-backend.onrender.com/api/financeiro";
+const API_PRODUTOS     = "https://borba-backend.onrender.com/api/produtos";
+const API_FINANCEIRO   = "https://borba-backend.onrender.com/api/financeiro";
 
 let funcionarioSelecionado = null;
 
@@ -21,9 +21,10 @@ function toggleQuickMenu() {
 function highlightActive() {
   const atual = location.pathname.split('/').pop();
   Array.from(document.getElementById('quick-menu').children).forEach(btn => {
-    const destino = btn.getAttribute('onclick')
-                      .match(/'(.+)'/)[1]
-                      .split('/').pop();
+    const onclick = btn.getAttribute('onclick') || "";
+    const m = onclick.match(/'(.+)'/);
+    if (!m) return;
+    const destino = m[1].split('/').pop();
     if (destino === atual) {
       btn.classList.add('bg-[#103b2b]','text-white','dark:bg-white','dark:text-[#103b2b]');
       btn.classList.remove('border');
@@ -44,18 +45,18 @@ async function getFuncionarios() {
 
 async function salvarFuncionarioAPI(nome) {
   const res = await fetch(API_FUNCIONARIOS, {
-    method:  "POST",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ nome, foto: "foto-perfil.png", consumo: 0 })
+    body: JSON.stringify({ nome, foto: "foto-perfil.png", consumo: 0 })
   });
   return res.json();
 }
 
 async function atualizarConsumoAPI(id, valor) {
   await fetch(`${API_FUNCIONARIOS}/${id}/consumo`, {
-    method:  "PATCH",
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ valor })
+    body: JSON.stringify({ valor })
   });
 }
 
@@ -66,14 +67,12 @@ async function removerFuncionarioAPI(id) {
 async function renderizarFuncionarios() {
   const lista = document.getElementById("lista-funcionarios");
   if (!lista) return;
-
   const funcionarios = await getFuncionarios();
   lista.innerHTML = "";
-
   funcionarios.forEach(f => {
     lista.innerHTML += `
       <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-2xl p-4 shadow flex items-center space-x-4 transition">
-        <img src="assets/img/${f.foto}" alt="Foto" class="w-14 h-14 rounded-full object-cover" />
+        <img src="assets/img/${f.foto}" alt="Foto" class="w-14 h-14 rounded-full object-cover"/>
         <div class="flex-1">
           <h2 class="font-semibold">${f.nome}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">Consumo no mês:</p>
@@ -89,7 +88,7 @@ async function renderizarFuncionarios() {
   });
 }
 
-function abrirModalConsumo(id,nome) {
+function abrirModalConsumo(id, nome) {
   funcionarioSelecionado = id;
   document.getElementById("modal-funcionario").textContent = `Funcionário: ${nome}`;
   document.getElementById("modal-consumo").classList.remove("hidden");
@@ -102,7 +101,9 @@ function fecharModalConsumo() {
 
 async function registrarConsumo() {
   const valor = parseFloat(document.getElementById("consumo-valor").value);
-  if (isNaN(valor)||valor<=0){ alert("Insira um valor válido."); return; }
+  if (isNaN(valor) || valor <= 0) {
+    return alert("Insira um valor válido.");
+  }
   await atualizarConsumoAPI(funcionarioSelecionado, valor);
   fecharModalConsumo();
   renderizarFuncionarios();
@@ -115,7 +116,7 @@ async function adicionarFuncionario() {
   renderizarFuncionarios();
 }
 
-async function removerFuncionario(id,nome) {
+async function removerFuncionario(id, nome) {
   if (!confirm(`Deseja excluir ${nome}?`)) return;
   await removerFuncionarioAPI(id);
   renderizarFuncionarios();
@@ -131,52 +132,70 @@ async function getProdutos() {
 
 async function salvarProdutoAPI(produto) {
   const res = await fetch(API_PRODUTOS, {
-    method:  "POST",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify(produto)
+    body: JSON.stringify(produto)
   });
   return res.json();
+}
+
+async function editarProdutoAPI(id, quantidade) {
+  const res = await fetch(`${API_PRODUTOS}/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quantidade })
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Erro ao atualizar produto");
+  }
+  return res.json();
+}
+
+async function editarProduto(id, nome, atual) {
+  const entrada = prompt(`Produto: ${nome}\nQuantidade atual: ${atual}\n\nDigite a nova quantidade:`);
+  const novaQt = parseInt(entrada, 10);
+  if (isNaN(novaQt) || novaQt < 0) {
+    return alert("Quantidade inválida.");
+  }
+  try {
+    await editarProdutoAPI(id, novaQt);
+    renderizarTabela();
+  } catch (err) {
+    alert("Falha: " + err.message);
+  }
 }
 
 async function removerProdutoAPI(id) {
   await fetch(`${API_PRODUTOS}/${id}`, { method: "DELETE" });
 }
 
-async function updateQuantidadeAPI(id, delta) {
-  await fetch(`${API_PRODUTOS}/${id}/quantidade`, {
-    method:  "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ delta })
+async function renderizarTabela() {
+  const tbody = document.getElementById("tabela-estoque");
+  if (!tbody) return;
+  const produtos = await getProdutos();
+  let emFalta = 0;
+  tbody.innerHTML = "";
+  produtos.forEach(p => {
+    if (p.quantidade === 0) emFalta++;
+    tbody.innerHTML += `
+      <tr class="border-t">
+        <td class="p-4">${p.nome}</td>
+        <td class="p-4">${p.categoria}</td>
+        <td class="p-4">${p.quantidade}</td>
+        <td class="p-4 ${p.quantidade===0?'text-red-600':'text-green-600'}">
+          ${p.quantidade===0?'Em falta':'Disponível'}
+        </td>
+        <td class="p-4 flex items-center space-x-2">
+          <button onclick="editarProduto('${p._id}','${p.nome}',${p.quantidade})"
+            class="text-blue-600 hover:text-blue-800">✏️</button>
+          <button onclick="removerProduto('${p._id}')"
+            class="text-red-600 hover:text-red-800">🗑️</button>
+        </td>
+      </tr>`;
   });
-}
-
-async function changeQuantidade(id, delta) {
-  await updateQuantidadeAPI(id, delta);
-  renderizarTabela();
-}
-
-function abrirModal() {
-  document.getElementById("modal-produto").classList.remove("hidden");
-}
-
-function fecharModal() {
-  document.getElementById("modal-produto").classList.add("hidden");
-  document.getElementById("produto-nome").value = "";
-  document.getElementById("produto-categoria").value = "";
-  document.getElementById("produto-quantidade").value = "";
-}
-
-async function salvarProduto() {
-  const nome       = document.getElementById("produto-nome").value;
-  const categoria  = document.getElementById("produto-categoria").value;
-  const quantidade = parseInt(document.getElementById("produto-quantidade").value);
-  if (!nome||!categoria||isNaN(quantidade)){
-    alert("Preencha todos os campos corretamente.");
-    return;
-  }
-  await salvarProdutoAPI({ nome, categoria, quantidade });
-  fecharModal();
-  renderizarTabela();
+  document.getElementById("total-produtos").textContent     = produtos.length;
+  document.getElementById("produtos-em-falta").textContent = emFalta;
 }
 
 async function removerProduto(id) {
@@ -185,41 +204,16 @@ async function removerProduto(id) {
   renderizarTabela();
 }
 
-async function renderizarTabela() {
-  const tbody   = document.getElementById("tabela-estoque");
-  if (!tbody) return;
-
-  const produtos = await getProdutos();
-  tbody.innerHTML = "";
-  let emFalta = 0;
-
-  produtos.forEach(p => {
-    if (p.quantidade === 0) emFalta++;
-    tbody.innerHTML += `
-      <tr class="border-t">
-        <td class="p-4">${p.nome}</td>
-        <td class="p-4">${p.categoria}</td>
-        <td class="p-4">
-          <div class="flex items-center space-x-2">
-            <button onclick="changeQuantidade('${p._id}',-1)"
-              class="px-2 py-1 bg-gray-200 rounded">➖</button>
-            <span>${p.quantidade}</span>
-            <button onclick="changeQuantidade('${p._id}',1)"
-              class="px-2 py-1 bg-gray-200 rounded">➕</button>
-          </div>
-        </td>
-        <td class="p-4 ${p.quantidade===0?'text-red-600':'text-green-600'}">
-          ${p.quantidade===0?'Em falta':'Disponível'}
-        </td>
-        <td class="p-4">
-          <button onclick="removerProduto('${p._id}')"
-            class="text-red-600 hover:text-red-800">🗑️</button>
-        </td>
-      </tr>`;
-  });
-
-  document.getElementById("total-produtos").textContent     = produtos.length;
-  document.getElementById("produtos-em-falta").textContent = emFalta;
+async function salvarProduto() {
+  const nome       = document.getElementById("produto-nome").value;
+  const categoria  = document.getElementById("produto-categoria").value;
+  const quantidade = parseInt(document.getElementById("produto-quantidade").value, 10);
+  if (!nome || !categoria || isNaN(quantidade)) {
+    return alert("Preencha todos os campos corretamente.");
+  }
+  await salvarProdutoAPI({ nome, categoria, quantidade });
+  document.getElementById("modal-produto").classList.add("hidden");
+  renderizarTabela();
 }
 
 /**********************
@@ -232,9 +226,9 @@ async function getLancamentosAPI() {
 
 async function salvarLancamentoAPI(dados) {
   const res = await fetch(API_FINANCEIRO, {
-    method:  "POST",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify(dados)
+    body: JSON.stringify(dados)
   });
   return res.json();
 }
@@ -251,13 +245,11 @@ async function renderizarLancamentos() {
   if (!tbody||!receitas||!despesas||!saldo) return;
 
   const lancs = await getLancamentosAPI();
-  let r = 0, d = 0;
-  tbody.innerHTML = "";
-
-  lancs.forEach(l => {
-    if (l.tipo === "receita") r += l.valor;
-    else d += l.valor;
-    tbody.innerHTML += `
+  let r=0, d=0;
+  tbody.innerHTML="";
+  lancs.forEach(l=>{
+    if(l.tipo==="receita") r+=l.valor; else d+=l.valor;
+    tbody.innerHTML+=`
       <tr class="border-t">
         <td class="p-4">${l.data}</td>
         <td class="p-4">${l.descricao}</td>
@@ -269,10 +261,9 @@ async function renderizarLancamentos() {
         </td>
       </tr>`;
   });
-
   receitas.textContent = `R$ ${r.toFixed(2)}`;
   despesas.textContent = `R$ ${d.toFixed(2)}`;
-  saldo.textContent    = `R$ ${(r - d).toFixed(2)}`;
+  saldo.textContent    = `R$ ${(r-d).toFixed(2)}`;
 }
 
 function abrirModalFinanceiro() {
@@ -284,21 +275,18 @@ function fecharModalFinanceiro() {
   document.getElementById("valor-fin").value = "";
   document.getElementById("tipo-fin").value  = "receita";
 }
-
 async function salvarLancamento() {
   const desc  = document.getElementById("desc-fin").value;
   const valor = parseFloat(document.getElementById("valor-fin").value);
   const tipo  = document.getElementById("tipo-fin").value;
   const data  = new Date().toLocaleDateString("pt-BR");
   if (!desc||isNaN(valor)||valor<=0) {
-    alert("Preencha todos os campos corretamente.");
-    return;
+    return alert("Preencha todos os campos corretamente.");
   }
   await salvarLancamentoAPI({ data, descricao: desc, tipo, valor });
   fecharModalFinanceiro();
   renderizarLancamentos();
 }
-
 async function removerLancamento(id) {
   if (!confirm("Deseja remover este lançamento?")) return;
   await removerLancamentoAPI(id);
@@ -318,19 +306,19 @@ async function filtrarRelatorio() {
   if (!tabela||!rEl||!dEl||!sEl) return;
 
   const lancs = await getLancamentosAPI();
-  let r=0, d=0;
-  const filt = lancs.filter(l => {
+  let r=0,d=0;
+  const filt = lancs.filter(l=>{
     const [day,month,year] = l.data.split("/");
     const dt = new Date(`${year}-${month}-${day}`);
     const si = inicio?new Date(inicio):null;
     const sf = fim?   new Date(fim)   :null;
-    return (!si||dt>=si) && (!sf||dt<=sf);
+    return (!si||dt>=si)&&(!sf||dt<=sf);
   });
 
-  tabela.innerHTML = "";
-  filt.forEach(l => {
-    if (l.tipo==="receita") r+=l.valor; else d+=l.valor;
-    tabela.innerHTML += `
+  tabela.innerHTML="";
+  filt.forEach(l=>{
+    if(l.tipo==="receita") r+=l.valor; else d+=l.valor;
+    tabela.innerHTML+=`
       <tr class="border-t">
         <td class="p-4">${l.data}</td>
         <td class="p-4">${l.descricao}</td>
@@ -338,16 +326,15 @@ async function filtrarRelatorio() {
         <td class="p-4">R$ ${l.valor.toFixed(2)}</td>
       </tr>`;
   });
-
   rEl.textContent = `R$ ${r.toFixed(2)}`;
   dEl.textContent = `R$ ${d.toFixed(2)}`;
-  sEl.textContent = `R$ ${(r - d).toFixed(2)}`;
+  sEl.textContent = `R$ ${(r-d).toFixed(2)}`;
 }
 
 /**********************
  * INICIALIZAÇÃO
  **********************/
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", ()=>{
   highlightActive();
   const path = location.pathname;
   if (path.includes("funcionarios")) renderizarFuncionarios();
