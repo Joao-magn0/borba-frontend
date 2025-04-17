@@ -5,6 +5,32 @@ const API_FINANCEIRO = "https://borba-backend.onrender.com/api/financeiro";
 let funcionarioSelecionado = null;
 
 /**********************
+ * AUXILIARES DE ACESSO RÁPIDO
+ **********************/
+function toggleQuickMenu() {
+  const menu = document.getElementById('quick-menu');
+  const aberto = menu.classList.toggle('open');
+  Array.from(menu.children).forEach((btn, i) => {
+    btn.style.transitionDelay = aberto ? `${i * 50}ms` : '0ms';
+  });
+  highlightActive();
+}
+function highlightActive() {
+  const atual = location.pathname.split('/').pop();
+  Array.from(document.getElementById('quick-menu').children).forEach(btn => {
+    // extrai o destino do onclick: location.href='…'
+    const destino = btn.getAttribute('onclick').match(/'(.+)'/)[1].split('/').pop();
+    if (destino === atual) {
+      btn.classList.add('bg-[#103b2b]','text-white','dark:bg-white','dark:text-[#103b2b]');
+      btn.classList.remove('border');
+    } else {
+      btn.classList.remove('bg-[#103b2b]','text-white','dark:bg-white','dark:text-[#103b2b]');
+      btn.classList.add('border');
+    }
+  });
+}
+
+/**********************
  * FUNCIONÁRIOS
  **********************/
 async function getFuncionarios() {
@@ -130,12 +156,10 @@ async function salvarProduto() {
   const nome = document.getElementById("produto-nome").value;
   const categoria = document.getElementById("produto-categoria").value;
   const quantidade = parseInt(document.getElementById("produto-quantidade").value);
-
   if (!nome || !categoria || isNaN(quantidade)) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
-
   await salvarProdutoAPI({ nome, categoria, quantidade });
   fecharModal();
   renderizarTabela();
@@ -202,23 +226,20 @@ async function renderizarLancamentos() {
   const receitas = document.getElementById("total-receitas");
   const despesas = document.getElementById("total-despesas");
   const saldo = document.getElementById("saldo-atual");
-
   if (!tbody || !receitas || !despesas || !saldo) return;
 
   const lancs = await getLancamentosAPI();
-  let totalReceita = 0;
-  let totalDespesa = 0;
+  let totalReceita = 0, totalDespesa = 0;
   tbody.innerHTML = "";
 
   lancs.forEach((l) => {
     if (l.tipo === "receita") totalReceita += l.valor;
     else totalDespesa += l.valor;
-
     tbody.innerHTML += `
       <tr class="border-t">
         <td class="p-4">${l.data}</td>
         <td class="p-4">${l.descricao}</td>
-        <td class="p-4 ${l.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}">${l.tipo}</td>
+        <td class="p-4 ${l.tipo==='receita'?'text-green-600':'text-red-600'}">${l.tipo}</td>
         <td class="p-4">R$ ${l.valor.toFixed(2)}</td>
         <td class="p-4">
           <button onclick="removerLancamento('${l._id}')" class="text-red-600 hover:text-red-800">🗑️</button>
@@ -234,33 +255,27 @@ async function renderizarLancamentos() {
 function abrirModalFinanceiro() {
   document.getElementById("modal-financeiro").classList.remove("hidden");
 }
-
 function fecharModalFinanceiro() {
   document.getElementById("modal-financeiro").classList.add("hidden");
   document.getElementById("desc-fin").value = "";
   document.getElementById("valor-fin").value = "";
   document.getElementById("tipo-fin").value = "receita";
 }
-
 async function salvarLancamento() {
   const desc = document.getElementById("desc-fin").value;
   const valor = parseFloat(document.getElementById("valor-fin").value);
-  const tipo = document.getElementById("tipo-fin").value;
-  const data = new Date().toLocaleDateString("pt-BR");
-
-  if (!desc || isNaN(valor) || valor <= 0) {
+  const tipo  = document.getElementById("tipo-fin").value;
+  const data  = new Date().toLocaleDateString("pt-BR");
+  if (!desc||isNaN(valor)||valor<=0) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
-
-  const novo = { data, descricao: desc, tipo, valor };
-  await salvarLancamentoAPI(novo);
+  await salvarLancamentoAPI({ data, descricao:desc, tipo, valor });
   fecharModalFinanceiro();
   renderizarLancamentos();
 }
-
 async function removerLancamento(id) {
-  if (confirm("Deseja remover este lançamento?")) {
+  if(confirm("Deseja remover este lançamento?")) {
     await removerLancamentoAPI(id);
     renderizarLancamentos();
   }
@@ -270,53 +285,47 @@ async function removerLancamento(id) {
  * RELATÓRIOS
  **********************/
 async function filtrarRelatorio() {
-  const dataInicio = document.getElementById("data-inicio")?.value;
-  const dataFim = document.getElementById("data-fim")?.value;
+  const inicio = document.getElementById("data-inicio")?.value;
+  const fim    = document.getElementById("data-fim")?.value;
   const tabela = document.getElementById("tabela-relatorio");
-  const receitasEl = document.getElementById("total-receitas-rel");
-  const despesasEl = document.getElementById("total-despesas-rel");
-  const saldoEl = document.getElementById("saldo-rel");
-
-  if (!tabela || !receitasEl || !despesasEl || !saldoEl) return;
+  const rEl    = document.getElementById("total-receitas-rel");
+  const dEl    = document.getElementById("total-despesas-rel");
+  const sEl    = document.getElementById("saldo-rel");
+  if (!tabela||!rEl||!dEl||!sEl) return;
 
   const lancs = await getLancamentosAPI();
-  let receitas = 0;
-  let despesas = 0;
-
-  const filtrados = lancs.filter((l) => {
-    const [dia, mes, ano] = l.data.split("/");
-    const dataLanc = new Date(`${ano}-${mes}-${dia}`);
-    const inicio = dataInicio ? new Date(dataInicio) : null;
-    const fim = dataFim ? new Date(dataFim) : null;
-    return (!inicio || dataLanc >= inicio) && (!fim || dataLanc <= fim);
+  let r=0, d=0;
+  const filt = lancs.filter(l=>{
+    const [dia,mes,ano] = l.data.split("/");
+    const dt = new Date(`${ano}-${mes}-${dia}`);
+    const si = inicio?new Date(inicio):null;
+    const sf = fim?   new Date(fim)   :null;
+    return (!si||dt>=si) && (!sf||dt<=sf);
   });
-
-  tabela.innerHTML = "";
-  filtrados.forEach((l) => {
-    if (l.tipo === "receita") receitas += l.valor;
-    else despesas += l.valor;
-
-    tabela.innerHTML += `
+  tabela.innerHTML="";
+  filt.forEach(l=>{
+    if(l.tipo==="receita") r+=l.valor; else d+=l.valor;
+    tabela.innerHTML+=`
       <tr class="border-t">
         <td class="p-4">${l.data}</td>
         <td class="p-4">${l.descricao}</td>
-        <td class="p-4 ${l.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}">${l.tipo}</td>
+        <td class="p-4 ${l.tipo==='receita'?'text-green-600':'text-red-600'}">${l.tipo}</td>
         <td class="p-4">R$ ${l.valor.toFixed(2)}</td>
       </tr>`;
   });
-
-  receitasEl.textContent = `R$ ${receitas.toFixed(2)}`;
-  despesasEl.textContent = `R$ ${despesas.toFixed(2)}`;
-  saldoEl.textContent = `R$ ${(receitas - despesas).toFixed(2)}`;
+  rEl.textContent=`R$ ${r.toFixed(2)}`;
+  dEl.textContent=`R$ ${d.toFixed(2)}`;
+  sEl.textContent=`R$ ${(r-d).toFixed(2)}`;
 }
 
 /**********************
  * INICIALIZAÇÃO
  **********************/
 window.addEventListener("DOMContentLoaded", () => {
-  const path = window.location.pathname;
+  highlightActive();
+  const path = location.pathname;
   if (path.includes("funcionarios")) renderizarFuncionarios();
-  if (path.includes("estoque")) renderizarTabela();
-  if (path.includes("financeiro")) renderizarLancamentos();
-  if (path.includes("relatorios")) filtrarRelatorio();
+  if (path.includes("estoque"))       renderizarTabela();
+  if (path.includes("financeiro"))    renderizarLancamentos();
+  if (path.includes("relatorios"))    filtrarRelatorio();
 });

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Início | Borba Café</title>
 
   <link rel="icon" type="image/png" href="./icons/borba-logo.png" />
@@ -18,8 +18,8 @@
 </head>
 <body class="bg-[#f3f4f6] dark:bg-gray-900 min-h-screen flex flex-col justify-center items-center text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <!-- Tela de Boas-Vindas -->
-  <div id="boas-vindas" class="fixed inset-0 z-50 bg-[#103b2b] flex items-center justify-center text-white text-center transition-opacity duration-1000">
+  <!-- Tela de Descanso -->
+  <div id="boas-vindas" class="fixed inset-0 z-50 bg-[#103b2b] hidden items-center justify-center text-white text-center transition-opacity duration-1000">
     <div class="space-y-4">
       <h1 id="mensagem-boas-vindas" class="text-3xl md:text-4xl font-bold animate-pulse">Seja bem-vindo ao sistema Borba Café ☕</h1>
       <p class="text-sm md:text-base opacity-80">Carregando o sistema...</p>
@@ -69,8 +69,31 @@
     }
   </script>
 
-  <!-- Boas-vindas + Tema -->
+  <!-- Tema e Tela de Descanso -->
   <script>
+    const TEMPO_INATIVIDADE = 60000;
+    let timeoutInatividade;
+
+    function mostrarTelaDescanso() {
+      const tela = document.getElementById("boas-vindas");
+      tela.style.display = "flex";
+      tela.classList.remove("opacity-0");
+    }
+
+    function esconderTelaDescanso() {
+      const tela = document.getElementById("boas-vindas");
+      tela.classList.add("opacity-0");
+      setTimeout(() => {
+        tela.style.display = "none";
+      }, 1000);
+    }
+
+    function resetarInatividade() {
+      esconderTelaDescanso();
+      clearTimeout(timeoutInatividade);
+      timeoutInatividade = setTimeout(mostrarTelaDescanso, TEMPO_INATIVIDADE);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const hora = new Date().getHours();
       let saudacao = "Seja bem-vindo";
@@ -78,15 +101,15 @@
       else if (hora >= 12 && hora < 18) saudacao = "Boa tarde";
       else saudacao = "Boa noite";
 
-      document.getElementById("mensagem-boas-vindas").textContent = `${saudacao}, seja bem-vindo ao sistema Borba Café ☕`;
+      document.getElementById("mensagem-boas-vindas").textContent = `${saudacao}, seja bem-vindo ao Borba Café ☕`;
 
-      setTimeout(() => {
-        const tela = document.getElementById("boas-vindas");
-        tela.classList.add("opacity-0");
-        setTimeout(() => {
-          tela.style.display = 'none';
-        }, 1000);
-      }, 2000);
+      // Iniciar inatividade
+      resetarInatividade();
+
+      // Eventos que resetam a inatividade
+      ["mousemove", "keydown", "click", "touchstart"].forEach(evento => {
+        document.addEventListener(evento, resetarInatividade);
+      });
 
       const icon = document.getElementById("icon-darkmode");
       icon.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
