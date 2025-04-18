@@ -1,8 +1,8 @@
 // js/main.js
 
 const API_FUNCIONARIOS = "https://borba-backend.onrender.com/api/funcionarios";
-const API_PRODUTOS     = "https://borba-backend.onrender.com/api/produtos";
-const API_FINANCEIRO   = "https://borba-backend.onrender.com/api/financeiro";
+const API_PRODUTOS    = "https://borba-backend.onrender.com/api/produtos";
+const API_FINANCEIRO  = "https://borba-backend.onrender.com/api/financeiro";
 
 let funcionarioSelecionado = null;
 
@@ -10,27 +10,38 @@ let funcionarioSelecionado = null;
  * AUXILIARES DE ACESSO RÁPIDO
  **********************/
 function toggleQuickMenu() {
-  const menu   = document.getElementById('quick-menu');
-  const aberto = menu.classList.toggle('open');
+  const menu   = document.getElementById("quick-menu");
+  const aberto = menu.classList.toggle("open");
   Array.from(menu.children).forEach((btn, i) => {
-    btn.style.transitionDelay = aberto ? `${i * 50}ms` : '0ms';
+    btn.style.transitionDelay = aberto ? `${i * 50}ms` : "0ms";
   });
   highlightActive();
 }
 
 function highlightActive() {
-  const atual = location.pathname.split('/').pop();
-  Array.from(document.getElementById('quick-menu').children).forEach(btn => {
+  const atual = location.pathname.split("/").pop();
+  Array.from(document.getElementById("quick-menu").children).forEach(btn => {
     const destino = btn
-      .getAttribute('onclick')
+      .getAttribute("onclick")
       .match(/'(.+)'/)[1]
-      .split('/').pop();
+      .split("/")
+      .pop();
     if (destino === atual) {
-      btn.classList.add('bg-[#103b2b]','text-white','dark:bg-white','dark:text-[#103b2b]');
-      btn.classList.remove('border');
+      btn.classList.add(
+        "bg-[#103b2b]",
+        "text-white",
+        "dark:bg-white",
+        "dark:text-[#103b2b]"
+      );
+      btn.classList.remove("border");
     } else {
-      btn.classList.remove('bg-[#103b2b]','text-white','dark:bg-white','dark:text-[#103b2b]');
-      btn.classList.add('border');
+      btn.classList.remove(
+        "bg-[#103b2b]",
+        "text-white",
+        "dark:bg-white",
+        "dark:text-[#103b2b]"
+      );
+      btn.classList.add("border");
     }
   });
 }
@@ -73,8 +84,10 @@ async function renderizarFuncionarios() {
 
   funcionarios.forEach(f => {
     lista.innerHTML += `
-      <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-2xl p-4 shadow flex items-center space-x-4 transition">
-        <img src="assets/img/${f.foto}" alt="Foto" class="w-14 h-14 rounded-full object-cover" />
+      <div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                      rounded-2xl p-4 shadow flex items-center space-x-4 transition">
+        <img src="assets/img/${f.foto}" alt="Foto"
+             class="w-14 h-14 rounded-full object-cover" />
         <div class="flex-1">
           <h2 class="font-semibold">${f.nome}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">Consumo no mês:</p>
@@ -90,7 +103,7 @@ async function renderizarFuncionarios() {
   });
 }
 
-function abrirModalConsumo(id,nome) {
+function abrirModalConsumo(id, nome) {
   funcionarioSelecionado = id;
   document.getElementById("modal-funcionario").textContent = `Funcionário: ${nome}`;
   document.getElementById("modal-consumo").classList.remove("hidden");
@@ -103,7 +116,7 @@ function fecharModalConsumo() {
 
 async function registrarConsumo() {
   const valor = parseFloat(document.getElementById("consumo-valor").value);
-  if (isNaN(valor)||valor<=0) {
+  if (isNaN(valor) || valor <= 0) {
     alert("Insira um valor válido.");
     return;
   }
@@ -119,7 +132,7 @@ async function adicionarFuncionario() {
   renderizarFuncionarios();
 }
 
-async function removerFuncionario(id,nome) {
+async function removerFuncionario(id, nome) {
   if (!confirm(`Deseja excluir ${nome}?`)) return;
   await removerFuncionarioAPI(id);
   renderizarFuncionarios();
@@ -146,18 +159,19 @@ async function removerProdutoAPI(id) {
   await fetch(`${API_PRODUTOS}/${id}`, { method: "DELETE" });
 }
 
-// envia PATCH /api/produtos/:id com { quantidade }
+// Atualiza QUANTIDADE absoluta via PATCH /api/produtos/:id { quantidade }
 async function updateQuantidadeAPI(id, quantidade) {
   const res = await fetch(`${API_PRODUTOS}/${id}`, {
     method:  "PATCH",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ quantidade })
   });
-  if (!res.ok) throw new Error("Falha ao atualizar quantidade");
-  return res.json();
+  if (!res.ok) {
+    console.error("Erro ao atualizar produto:", res.status, await res.text());
+  }
 }
 
-// prompt de edição absoluta
+// Abre um prompt para inserir novo valor absoluto
 async function editarProduto(id, nome, atual) {
   const entrada = prompt(
     `Produto: ${nome}\nQuantidade atual: ${atual}\n\nDigite a nova quantidade:`
@@ -184,8 +198,11 @@ function fecharModal() {
 async function salvarProduto() {
   const nome       = document.getElementById("produto-nome").value;
   const categoria  = document.getElementById("produto-categoria").value;
-  const quantidade = parseInt(document.getElementById("produto-quantidade").value, 10);
-  if (!nome||!categoria||isNaN(quantidade)) {
+  const quantidade = parseInt(
+    document.getElementById("produto-quantidade").value,
+    10
+  );
+  if (!nome || !categoria || isNaN(quantidade)) {
     alert("Preencha todos os campos corretamente.");
     return;
   }
@@ -255,14 +272,15 @@ async function renderizarLancamentos() {
   const receitas = document.getElementById("total-receitas");
   const despesas = document.getElementById("total-despesas");
   const saldo    = document.getElementById("saldo-atual");
-  if (!tbody||!receitas||!despesas||!saldo) return;
+  if (!tbody || !receitas || !despesas || !saldo) return;
 
   const lancs = await getLancamentosAPI();
-  let r=0, d=0;
+  let r = 0, d = 0;
   tbody.innerHTML = "";
 
   lancs.forEach(l => {
-    if (l.tipo==="receita") r+=l.valor; else d+=l.valor;
+    if (l.tipo === "receita") r += l.valor;
+    else d += l.valor;
     tbody.innerHTML += `
       <tr class="border-t">
         <td class="p-4">${l.data}</td>
@@ -281,6 +299,34 @@ async function renderizarLancamentos() {
   saldo.textContent    = `R$ ${(r - d).toFixed(2)}`;
 }
 
+function abrirModalFinanceiro() {
+  document.getElementById("modal-financeiro").classList.remove("hidden");
+}
+function fecharModalFinanceiro() {
+  document.getElementById("modal-financeiro").classList.add("hidden");
+  document.getElementById("desc-fin").value  = "";
+  document.getElementById("valor-fin").value = "";
+  document.getElementById("tipo-fin").value  = "receita";
+}
+async function salvarLancamento() {
+  const desc  = document.getElementById("desc-fin").value;
+  const valor = parseFloat(document.getElementById("valor-fin").value);
+  const tipo  = document.getElementById("tipo-fin").value;
+  const data  = new Date().toLocaleDateString("pt-BR");
+  if (!desc || isNaN(valor) || valor <= 0) {
+    alert("Preencha todos os campos corretamente.");
+    return;
+  }
+  await salvarLancamentoAPI({ data, descricao: desc, tipo, valor });
+  fecharModalFinanceiro();
+  renderizarLancamentos();
+}
+async function removerLancamento(id) {
+  if (!confirm("Deseja remover este lançamento?")) return;
+  await removerLancamentoAPI(id);
+  renderizarLancamentos();
+}
+
 /**********************
  * RELATÓRIOS
  **********************/
@@ -292,21 +338,22 @@ async function filtrarRelatorio() {
   const rEl    = document.getElementById("total-receitas-rel");
   const dEl    = document.getElementById("total-despesas-rel");
   const sEl    = document.getElementById("saldo-rel");
-  if (!tabela||!rEl||!dEl||!sEl) return;
+  if (!tabela || !rEl || !dEl || !sEl) return;
 
   const lancs = await getLancamentosAPI();
-  let r=0, d=0;
+  let r = 0, d = 0;
   const filt = lancs.filter(l => {
     const [day,month,year] = l.data.split("/");
     const dt = new Date(`${year}-${month}-${day}`);
-    const si = inicio?new Date(inicio):null;
-    const sf = fim?   new Date(fim)   :null;
+    const si = inicio ? new Date(inicio) : null;
+    const sf = fim    ? new Date(fim)    : null;
     return (!si||dt>=si) && (!sf||dt<=sf);
   });
 
   tabela.innerHTML = "";
   filt.forEach(l => {
-    if (l.tipo==="receita") r+=l.valor; else d+=l.valor;
+    if (l.tipo === "receita") r += l.valor;
+    else d += l.valor;
     tabela.innerHTML += `
       <tr class="border-t">
         <td class="p-4">${l.data}</td>
