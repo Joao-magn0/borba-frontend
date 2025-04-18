@@ -1,11 +1,10 @@
 // js/main.js
 
 const API_FUNCIONARIOS = "https://borba-backend.onrender.com/api/funcionarios";
-const API_PRODUTOS    = "https://borba-backend.onrender.com/api/produtos";
-const API_FINANCEIRO  = "https://borba-backend.onrender.com/api/financeiro";
+const API_PRODUTOS     = "https://borba-backend.onrender.com/api/produtos";
+const API_FINANCEIRO   = "https://borba-backend.onrender.com/api/financeiro";
 
 let funcionarioSelecionado = null;
-
 
 /**********************
  * AUXILIARES DE ACESSO RÁPIDO
@@ -22,9 +21,10 @@ function toggleQuickMenu() {
 function highlightActive() {
   const atual = location.pathname.split('/').pop();
   Array.from(document.getElementById('quick-menu').children).forEach(btn => {
-    const destino = btn.getAttribute('onclick')
-                      .match(/'(.+)'/)[1]
-                      .split('/').pop();
+    const destino = btn
+      .getAttribute('onclick')
+      .match(/'(.+)'/)[1]
+      .split('/').pop();
     if (destino === atual) {
       btn.classList.add('bg-[#103b2b]','text-white','dark:bg-white','dark:text-[#103b2b]');
       btn.classList.remove('border');
@@ -34,7 +34,6 @@ function highlightActive() {
     }
   });
 }
-
 
 /**********************
  * FUNCIONÁRIOS
@@ -104,7 +103,10 @@ function fecharModalConsumo() {
 
 async function registrarConsumo() {
   const valor = parseFloat(document.getElementById("consumo-valor").value);
-  if (isNaN(valor)||valor<=0){ alert("Insira um valor válido."); return; }
+  if (isNaN(valor)||valor<=0) {
+    alert("Insira um valor válido.");
+    return;
+  }
   await atualizarConsumoAPI(funcionarioSelecionado, valor);
   fecharModalConsumo();
   renderizarFuncionarios();
@@ -122,7 +124,6 @@ async function removerFuncionario(id,nome) {
   await removerFuncionarioAPI(id);
   renderizarFuncionarios();
 }
-
 
 /**********************
  * ESTOQUE
@@ -145,16 +146,18 @@ async function removerProdutoAPI(id) {
   await fetch(`${API_PRODUTOS}/${id}`, { method: "DELETE" });
 }
 
-// **Rota corrigida**: PATCH /api/produtos/:id, enviando { quantidade }
+// envia PATCH /api/produtos/:id com { quantidade }
 async function updateQuantidadeAPI(id, quantidade) {
-  await fetch(`${API_PRODUTOS}/${id}`, {
+  const res = await fetch(`${API_PRODUTOS}/${id}`, {
     method:  "PATCH",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ quantidade })
   });
+  if (!res.ok) throw new Error("Falha ao atualizar quantidade");
+  return res.json();
 }
 
-// abre prompt para editar quantidade absoluta
+// prompt de edição absoluta
 async function editarProduto(id, nome, atual) {
   const entrada = prompt(
     `Produto: ${nome}\nQuantidade atual: ${atual}\n\nDigite a nova quantidade:`
@@ -216,7 +219,7 @@ async function renderizarTabela() {
           ${p.quantidade===0?'Em falta':'Disponível'}
         </td>
         <td class="p-4 flex items-center space-x-2">
-          <button onclick="editarProduto('${p._id}', '${p.nome}', ${p.quantidade})"
+          <button onclick="editarProduto('${p._id}','${p.nome}',${p.quantidade})"
             class="text-blue-600 hover:text-blue-800">✏️</button>
           <button onclick="removerProduto('${p._id}')"
             class="text-red-600 hover:text-red-800">🗑️</button>
@@ -228,10 +231,10 @@ async function renderizarTabela() {
   document.getElementById("produtos-em-falta").textContent = emFalta;
 }
 
-
 /**********************
- * FINANCEIRO (sem alterações)
+ * FINANCEIRO
  **********************/
+// (sem alterações)
 async function getLancamentosAPI() {
   const res = await fetch(API_FINANCEIRO);
   return res.json();
@@ -277,35 +280,11 @@ async function renderizarLancamentos() {
   despesas.textContent = `R$ ${d.toFixed(2)}`;
   saldo.textContent    = `R$ ${(r - d).toFixed(2)}`;
 }
-function abrirModalFinanceiro() { document.getElementById("modal-financeiro").classList.remove("hidden"); }
-function fecharModalFinanceiro() {
-  document.getElementById("modal-financeiro").classList.add("hidden");
-  document.getElementById("desc-fin").value  = "";
-  document.getElementById("valor-fin").value = "";
-  document.getElementById("tipo-fin").value  = "receita";
-}
-async function salvarLancamento() {
-  const desc  = document.getElementById("desc-fin").value;
-  const valor = parseFloat(document.getElementById("valor-fin").value);
-  const tipo  = document.getElementById("tipo-fin").value;
-  const data  = new Date().toLocaleDateString("pt-BR");
-  if (!desc||isNaN(valor)||valor<=0) {
-    alert("Preencha todos os campos corretamente.");
-    return;
-  }
-  await salvarLancamentoAPI({ data, descricao: desc, tipo, valor });
-  fecharModalFinanceiro();
-  renderizarLancamentos();
-}
-async function removerLancamento(id) {
-  if (!confirm("Deseja remover este lançamento?")) return;
-  await removerLancamentoAPI(id);
-  renderizarLancamentos();
-}
 
 /**********************
- * RELATÓRIOS (sem alterações)
+ * RELATÓRIOS
  **********************/
+// (sem alterações)
 async function filtrarRelatorio() {
   const inicio = document.getElementById("data-inicio")?.value;
   const fim    = document.getElementById("data-fim")?.value;
